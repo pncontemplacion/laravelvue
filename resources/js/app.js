@@ -10,8 +10,11 @@ window.Vue = require('vue');
 import moment from "moment";
 import VueRouter from 'vue-router'
 import { Form, HasError, AlertError } from 'vform'
+import Gate from "./Gate"
 import VueProgressBar from 'vue-progressbar'
 import Swal from 'sweetalert2'
+
+
 
 window.Form = Form;
 window.Swal = Swal;
@@ -46,8 +49,11 @@ const options = {
 
   Vue.use(VueProgressBar, options)
 
+  Vue.prototype.$gate = new Gate(window.user);
+
 let routes = [
     { path: '/dashboard', component: require('./components/Dashboard.vue').default },
+    { path: '/developer', component: require('./components/Developer.vue').default },
     { path: '/users', component: require('./components/Users.vue').default },
     { path: '/profile', component: require('./components/Profile.vue').default }
 
@@ -69,6 +75,9 @@ Vue.filter('myDate', function (created){
 
 
 
+let Fire = new Vue();
+window.Fire = Fire;
+
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -80,7 +89,30 @@ Vue.filter('myDate', function (created){
 // const files = require.context('./', true, /\.vue$/i);
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default));
 
+/* Passport Component*/
+Vue.component(
+    'passport-clients',
+    require('./components/passport/Clients.vue').default
+);
+
+Vue.component(
+    'passport-authorized-clients',
+    require('./components/passport/AuthorizedClients.vue').default
+);
+
+Vue.component(
+    'passport-personal-access-tokens',
+    require('./components/passport/PersonalAccessTokens.vue').default
+);
+
+Vue.component(
+    'not-found',
+    require('./components/NotFound.vue').default
+);
+
 Vue.component('example-component', require('./components/ExampleComponent.vue').default);
+
+Vue.component('pagination', require('laravel-vue-pagination'));
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

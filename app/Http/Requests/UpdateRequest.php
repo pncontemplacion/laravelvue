@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UserRequest extends FormRequest
+class UpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,11 +23,11 @@ class UserRequest extends FormRequest
      */
     public function rules()
     {
-        
+        $user = auth('api')->user();
         return [
             'name' => 'required|string|max:70',
-            'email' => 'required|string|email|max:100|unique:users',
-            'password' => 'required|string|min:8',
-         ];
+            'email' => 'required|string|email|max:100|unique:users,email,'.$user->id,
+            'password' => 'sometimes|min:8'
+        ];
     }
 }

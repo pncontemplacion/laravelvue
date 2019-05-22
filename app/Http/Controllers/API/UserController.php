@@ -5,10 +5,24 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\User;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\UserRequest;
+use App\Http\Requests\UpdateRequest;
+
 
 class UserController extends Controller
 {
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -16,7 +30,11 @@ class UserController extends Controller
      */
     public function index()
     {
-        return User::latest()->paginate(10);
+        $this->authorize('isAdmin');
+        if (\Gate::allows('isAdmin') || \Gate::allows('isAuthor')) {
+            return User::latest()->paginate(5);
+        }
+
     }
 
     /**
@@ -27,10 +45,54 @@ class UserController extends Controller
      */
     public function store(UserRequest $request)
     {
-        $validated = $request->validated();
 
-           return User::create($request->all());
+        return User::create([
+            'name' => $request['name'],
+            'email' => $request['email'],
+            'type' => $request['type'],
+            'bio' => $request['bio'],
+            'photo' => $request['photo'],
+            'password' => Hash::make($request['password']),
+        ]);
 
+
+    }
+
+
+    public function updateProfile(UpdateRequest $request)
+    {
+       $user = auth('api')->user();
+
+        $currentPhoto = $user->photo;
+
+
+        if($request->photo != $currentPhoto){
+            $name = time().'.' . explode('/', explode(':', substr($request->photo, 0, strpos($request->photo, ';')))[1])[1];
+
+            \Image::make($request->photo)->save(public_path('img/profile/').$name);
+            $request->merge(['photo' => $name]);
+
+            $userPhoto = public_path('img/profile/').$currentPhoto;
+            if(file_exists($userPhoto)){
+                @unlink($userPhoto);
+            }
+
+        }
+
+
+        if(!empty($request->password)){
+            $request->merge(['password' => Hash::make($request['password'])]);
+        }
+
+
+        $user->update($request->all());
+        return ['message' => "Success"];
+    }
+
+
+    public function profile()
+    {
+        return auth('api')->user();
     }
 
     /**
@@ -51,9 +113,13 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateRequest $request, $id)
     {
-        //
+
+        $user = User::findOrFail($id);
+
+        $user->update($request->all());
+        return ['message' => 'Updated the user info'];
     }
 
     /**
@@ -64,6 +130,29 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        //
+
+        $this->authorize('isAdmin');
+
+        $user = User::findOrFail($id);
+        // delete the user
+
+        $user->delete();
+
+        return ['message' => 'User Deleted'];
+    }
+
+    public function search(){
+
+        if ($search = \Request::get('q')) {
+            $users = User::where(function($query) use ($search){
+                $query->where('name','LIKE',"%$search%")
+                        ->orWhere('email','LIKE',"%$search%");
+            })->paginate(20);
+        }else{
+            $users = User::latest()->paginate(5);
+        }
+
+        return $users;
+
     }
 }

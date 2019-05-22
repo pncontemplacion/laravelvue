@@ -109,14 +109,14 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="password" class="col-sm-12 control-label">Password (leave empty if not changing)</label>
+                                    <label for="password" class="col-sm-12 control-label">Passport (leave empty if not changing)</label>
 
                                     <div class="col-sm-12">
                                     <input type="password"
                                         v-model="form.password"
                                         class="form-control"
                                         id="password"
-                                        placeholder="Password"
+                                        placeholder="Passport"
                                         :class="{ 'is-invalid': form.errors.has('password') }"
                                     >
                                      <has-error :form="form" field="password"></has-error>
@@ -168,11 +168,8 @@
 
             getProfilePhoto(){
 
-                let prefix = (this.form.photo.match(/\//) ? '' : '/img/profile/');
-               return prefix + this.form.photo;
-
-               // let photo = (this.form.photo.length > 200) ? this.form.photo : "img/profile/"+ this.form.photo ;
-               //  return photo;
+                let photo = (this.form.photo.length > 200) ? this.form.photo : "img/profile/"+ this.form.photo ;
+                return photo;
             },
 
             updateInfo(){
@@ -182,7 +179,7 @@
                 }
                 this.form.put('api/profile')
                 .then(()=>{
-                     Fire.$emit('AfterAction');
+                     Fire.$emit('AfterCreate');
                     this.$Progress.finish();
                 })
                 .catch(() => {
@@ -195,7 +192,7 @@
 
                 let limit = 1024 * 1024 * 2;
                 if(file['size'] > limit){
-                    Swal.fire({
+                    swal({
                         type: 'error',
                         title: 'Oops...',
                         text: 'You are uploading a large file',
